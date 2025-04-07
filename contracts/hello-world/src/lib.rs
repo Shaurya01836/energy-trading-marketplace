@@ -1,16 +1,17 @@
 #![allow(non_snake_case)]
 #![no_std]
-use soroban_sdk::{contract, contracttype, contractimpl, log, Env, Symbol, String, Address, symbol_short, Vec};
+use soroban_sdk::{contract, contracttype, contractimpl, log, Env, Symbol, Address, symbol_short, Vec};
+use core::mem;
 
 
 // Energy offer status tracking structure
 #[contracttype]
 #[derive(Clone)]
 pub struct MarketStatus {
-    pub active_offers: u64,     // Number of currently active energy offers
-    pub completed_trades: u64,  // Number of successfully completed trades
-    pub total_energy_traded: u64, // Total energy units traded on the platform
-    pub total_offers_created: u64  // Total number of offers ever created
+    pub active_offers: u64,
+    pub completed_trades: u64,
+    pub total_energy_traded: u64,
+    pub total_offers_created: u64
 }
 
 // Reference to the MarketStatus struct
@@ -28,31 +29,31 @@ pub enum EnergyType {
 }
 
 // Mapping offer_id to EnergyOffer struct
-#[contracttype] 
-pub enum OfferBook { 
+#[contracttype]
+pub enum OfferBook {
     EnergyOffer(u64)
 }
 
 // For creating unique offer IDs
-const OFFER_COUNT: Symbol = symbol_short!("O_COUNT"); 
+const OFFER_COUNT: Symbol = symbol_short!("O_COUNT");
 
 // Structure for energy offers
 #[contracttype]
-#[derive(Clone)] 
+#[derive(Clone)]
 pub struct EnergyOffer {
-    pub offer_id: u64,           // Unique identifier for the offer
-    pub seller: Address,         // Address of energy producer
-    pub energy_amount: u64,      // Amount of energy offered (in kWh)
-    pub price_per_unit: u64,     // Price per kWh (in smallest token unit)
-    pub energy_type: EnergyType, // Source of energy
-    pub creation_time: u64,      // Timestamp when offer was created
-    pub expiration_time: u64,    // Timestamp when offer expires
-    pub is_active: bool,         // Whether offer is still active
+    pub offer_id: u64,
+    pub seller: Address,
+    pub energy_amount: u64,
+    pub price_per_unit: u64,
+    pub energy_type: EnergyType,
+    pub creation_time: u64,
+    pub expiration_time: u64,
+    pub is_active: bool,
 }
 
 // Mapping trade_id to EnergyTrade struct
-#[contracttype] 
-pub enum TradeBook { 
+#[contracttype]
+pub enum TradeBook {
     EnergyTrade(u64)
 }
 
@@ -61,34 +62,34 @@ const TRADE_COUNT: Symbol = symbol_short!("T_COUNT");
 
 // Structure for completed trades
 #[contracttype]
-#[derive(Clone)] 
+#[derive(Clone)]
 pub struct EnergyTrade {
-    pub trade_id: u64,          // Unique identifier for the trade
-    pub offer_id: u64,          // Reference to the original offer
-    pub seller: Address,        // Address of energy producer
-    pub buyer: Address,         // Address of energy consumer
-    pub energy_amount: u64,     // Amount of energy traded
-    pub total_price: u64,       // Total price paid
-    pub energy_type: EnergyType, // Type of energy traded
-    pub trade_time: u64,        // Timestamp when trade was completed
+    pub trade_id: u64,
+    pub offer_id: u64,
+    pub seller: Address,
+    pub buyer: Address,
+    pub energy_amount: u64,
+    pub total_price: u64,
+    pub energy_type: EnergyType,
+    pub trade_time: u64,
 }
 
 // Mapping user address to user profile
-#[contracttype] 
-pub enum UserBook { 
+#[contracttype]
+pub enum UserBook {
     UserProfile(Address)
 }
 
 // Structure for user profiles
 #[contracttype]
-#[derive(Clone)] 
+#[derive(Clone)]
 pub struct UserProfile {
-    pub user_address: Address,     // User's address
-    pub total_energy_sold: u64,    // Total energy sold by user
-    pub total_energy_bought: u64,  // Total energy bought by user
-    pub reputation_score: u64,     // User reputation score (0-100)
-    pub active_offers: Vec<u64>,   // List of user's active offers
-    pub trade_history: Vec<u64>,   // List of user's completed trades
+    pub user_address: Address,
+    pub total_energy_sold: u64,
+    pub total_energy_bought: u64,
+    pub reputation_score: u64,
+    pub active_offers: Vec<u64>,
+    pub trade_history: Vec<u64>,
 }
 
 #[contract]
@@ -399,7 +400,8 @@ impl EnergyMarketplaceContract {
             match env.storage().instance().get::<OfferBook, EnergyOffer>(&OfferBook::EnergyOffer(i)) {
                 Some(offer) => {
                     // Check if energy types match and offer is active
-                    if std::mem::discriminant(&offer.energy_type) == std::mem::discriminant(&energy_type) && offer.is_active {
+                    if mem::discriminant(&offer.energy_type) == mem::discriminant(&energy_type) && offer.is_active {
+
                         filtered_offers.push_back(i);
                     }
                 },
